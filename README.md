@@ -8,10 +8,7 @@ A collaborative sticky note board API with real-time mutations powered by Last-W
 - [Architecture Overview](#architecture-overview)
 - [REST API Endpoints](#rest-api-endpoints)
 - [WebSocket API](#websocket-api)
-- [Data Models](#data-models)
 - [Error Handling](#error-handling)
-- [Examples](#examples)
-- [Production Considerations](#production-considerations)
 
 ---
 
