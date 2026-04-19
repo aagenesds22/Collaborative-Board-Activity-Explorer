@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mural-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mural-board-explorer
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/notes"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Add more services here (Redis cache, Message broker, Database) as the app scales
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #
+  # volumes:
+  #   redis-data:
