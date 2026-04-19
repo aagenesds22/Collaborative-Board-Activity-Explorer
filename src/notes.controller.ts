@@ -57,7 +57,14 @@ export class NotesController {
     offset: number;
     limit: number;
   }> {
-    return this.noteService.getNotes(query.offset, query.limit);
+    this.logger.log(`GET /notes: offset=${query.offset}, limit=${query.limit}`);
+    const startTime = Date.now();
+    const result = await this.noteService.getNotes(query.offset, query.limit);
+    const duration = Date.now() - startTime;
+    this.logger.debug(
+      `✓ GET /notes returned ${result.items.length}/${result.total} notes in ${duration}ms`,
+    );
+    return result;
   }
 
   /**
@@ -85,7 +92,14 @@ export class NotesController {
     offset: number;
     limit: number;
   }> {
-    return this.noteService.getNotesByAuthor(author, query.offset, query.limit);
+    this.logger.log(`GET /notes/by-author/${author}: offset=${query.offset}, limit=${query.limit}`);
+    const startTime = Date.now();
+    const result = await this.noteService.getNotesByAuthor(author, query.offset, query.limit);
+    const duration = Date.now() - startTime;
+    this.logger.debug(
+      `✓ GET /notes/by-author/${author} returned ${result.items.length}/${result.total} notes in ${duration}ms`,
+    );
+    return result;
   }
 
   /**
@@ -113,7 +127,14 @@ export class NotesController {
     offset: number;
     limit: number;
   }> {
-    return this.noteService.getNotesByColor(color, query.offset, query.limit);
+    this.logger.log(`GET /notes/by-color/${color}: offset=${query.offset}, limit=${query.limit}`);
+    const startTime = Date.now();
+    const result = await this.noteService.getNotesByColor(color, query.offset, query.limit);
+    const duration = Date.now() - startTime;
+    this.logger.debug(
+      `✓ GET /notes/by-color/${color} returned ${result.items.length}/${result.total} notes in ${duration}ms`,
+    );
+    return result;
   }
 
   /**
@@ -140,12 +161,21 @@ export class NotesController {
     offset: number;
     limit: number;
   }> {
-    return this.noteService.getNotesByDateRange(
+    this.logger.log(
+      `GET /notes/by-date-range: start=${query.start}, end=${query.end}, offset=${query.offset}, limit=${query.limit}`,
+    );
+    const startTime = Date.now();
+    const result = await this.noteService.getNotesByDateRange(
       query.start,
       query.end,
       query.offset,
       query.limit,
     );
+    const duration = Date.now() - startTime;
+    this.logger.debug(
+      `✓ GET /notes/by-date-range returned ${result.items.length}/${result.total} notes in ${duration}ms`,
+    );
+    return result;
   }
 
   /**
@@ -168,7 +198,15 @@ export class NotesController {
     notesPerAuthor: Record<string, number>;
     notesPerColor: Record<string, number>;
   }> {
-    return this.noteService.getStatistics();
+    this.logger.log('GET /notes/stats');
+    const startTime = Date.now();
+    const result = await this.noteService.getStatistics();
+    const duration = Date.now() - startTime;
+    this.logger.debug(
+      `✓ GET /notes/stats returned ${result.totalNotes} total notes, ` +
+      `${result.uniqueAuthors} authors, ${result.uniqueColors} colors in ${duration}ms`,
+    );
+    return result;
   }
 
   /**
@@ -180,7 +218,13 @@ export class NotesController {
   @Get('stats/by-author')
   @HttpCode(200)
   async getStatsByAuthor(): Promise<Record<string, number>> {
+    this.logger.log('GET /notes/stats/by-author');
+    const startTime = Date.now();
     const stats = await this.noteService.getStatistics();
+    const duration = Date.now() - startTime;
+    this.logger.debug(
+      `✓ GET /notes/stats/by-author returned ${Object.keys(stats.notesPerAuthor).length} authors in ${duration}ms`,
+    );
     return stats.notesPerAuthor;
   }
 
@@ -196,7 +240,14 @@ export class NotesController {
   @Get('recent')
   @HttpCode(200)
   async getRecentNotes(@Query() query: GetRecentNotesQueryDto): Promise<StickyNote[]> {
-    return this.noteService.getRecentNotes(query.limit);
+    this.logger.log(`GET /notes/recent: limit=${query.limit}`);
+    const startTime = Date.now();
+    const result = await this.noteService.getRecentNotes(query.limit);
+    const duration = Date.now() - startTime;
+    this.logger.debug(
+      `✓ GET /notes/recent returned ${result.length} notes in ${duration}ms`,
+    );
+    return result;
   }
 
   /**
@@ -214,12 +265,17 @@ export class NotesController {
   @Get(':id')
   @HttpCode(200)
   async getNoteById(@Param('id', ParseIntPipe) id: number): Promise<StickyNote | null> {
+    this.logger.log(`GET /notes/${id}`);
+    const startTime = Date.now();
     const note = await this.noteService.getNoteById(id);
 
     if (!note) {
+      this.logger.warn(`Note ${id} not found`);
       throw new NotFoundException(`Note with id '${id}' not found`);
     }
 
+    const duration = Date.now() - startTime;
+    this.logger.debug(`✓ GET /notes/${id} returned note in ${duration}ms`);
     return note;
   }
 }

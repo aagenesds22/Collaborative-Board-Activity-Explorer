@@ -4,10 +4,16 @@
  * Root NestJS module that configures:
  * - Dependency Injection bindings
  * - Controllers and Providers
+ * - WebSocket Gateway for real-time mutations
  * - NestJS features (Caching, Event Emitters)
  * 
  * Demonstrates clean architecture by binding interfaces to implementations,
  * allowing seamless provider/repository swaps without changing business logic.
+ * 
+ * Phase 2: CRDT & WebSocket Integration
+ * - CrdtService: Handles property-level mutation conflict resolution
+ * - NotesGateway: WebSocket endpoint for real-time collaboration
+ * - Socket.IO: Real-time communication with automatic reconnect
  */
 
 import { Module } from '@nestjs/common';
@@ -19,6 +25,10 @@ import { NotesController } from './notes.controller';
 
 // Application Services
 import { NoteService } from './application/services/note.service';
+import { CrdtService } from './application/services/crdt.service';
+
+// WebSocket Gateway
+import { NotesGateway } from './gateways/notes.gateway';
 
 // Infrastructure - Repositories
 import { InMemoryNoteRepository } from './infrastructure/repositories/in-memory-note.repository';
@@ -61,6 +71,10 @@ import {
   providers: [
     // Application Services
     NoteService,
+    CrdtService,
+
+    // WebSocket Gateway (Phase 2)
+    NotesGateway,
 
     // Infrastructure - Repositories
     InMemoryNoteRepository,
