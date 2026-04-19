@@ -7,12 +7,14 @@ A collaborative sticky note board API with real-time mutations powered by Last-W
 - [Quick Start](#quick-start)
 - [Architecture Overview](#architecture-overview)
 - [REST API Endpoints](#rest-api-endpoints)
-- [WebSocket API](#websocket-api)
+- [WebSocket (Socket.IO) API](#websocket-api-socketio)
+- [Examples](#examples)
+- [Testing with Postman](#testing-with-postman)
 - [Error Handling](#error-handling)
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose
@@ -47,7 +49,7 @@ docker-compose up --build
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ### Data Flow
 
@@ -86,7 +88,7 @@ docker-compose up --build
 ```
 ---
 
-## 📡 REST API Endpoints
+## REST API Endpoints
 
 All REST endpoints are **read-only**. Mutations are exclusively via WebSocket (see [WebSocket API](#websocket-api)).
 
@@ -373,7 +375,7 @@ curl "http://localhost:3000/api/notes/stats/by-author"
 
 ---
 
-## 🔌 WebSocket API
+## WebSocket API (Socket.IO)
 
 WebSocket connections enable **real-time collaborative mutations** with CRDT-based conflict resolution. Use Socket.IO to connect and subscribe to events.
 
@@ -506,50 +508,7 @@ socket.on('note.error', (payload) => {
 
 ---
 
-### Connection Lifecycle
-
-```javascript
-const io = require('socket.io-client');
-const socket = io('http://localhost:3000', { namespace: '/board' });
-
-// Connection established
-socket.on('connect', () => {
-  console.log(`✓ Connected as ${socket.id}`);
-});
-
-// User interaction
-socket.emit('note.update', {
-  noteId: 1,
-  property: 'text',
-  value: 'New content',
-  clientTimestamp: Date.now(),
-  clientId: 'my-client-id'
-});
-
-// Listen for mutation results
-socket.on('note.mutated', (data) => {
-  console.log(`✓ Note ${data.noteId} updated`);
-  updateUI(data.mergedState);
-});
-
-socket.on('note.conflict', (data) => {
-  console.log(`⚠ Mutation stale, accepting authoritative state`);
-  updateUI(data.currentState);
-});
-
-// Disconnection
-socket.on('disconnect', () => {
-  console.log('✗ Disconnected');
-});
-
-// For initial load or state reconciliation, use REST API
-// GET /api/notes for paginated notes or
-// GET /api/notes/:id for individual note state
-```
-
----
-
-## ❌ Error Handling
+## Error Handling
 
 ### HTTP Status Codes
 
@@ -583,7 +542,7 @@ socket.on('disconnect', () => {
 
 ---
 
-## 📝 Examples
+## Examples
 
 ### Scenario 1: Simple Mutation (JavaScript)
 
@@ -673,7 +632,7 @@ curl "http://localhost:3000/api/notes/by-date-range?start=2026-04-01&end=2026-04
 ```
 ---
 
-## 🧪 Testing with Postman
+## Testing with Postman
 
 Postman (v10.0+) has native WebSocket support, making it ideal for testing real-time mutation endpoints.
 
@@ -683,7 +642,7 @@ Postman (v10.0+) has native WebSocket support, making it ideal for testing real-
 2. **Running API:** Start the API with `docker-compose up` (listening on `http://localhost:3000`)
 3. **Basic Knowledge:** Familiarity with Postman's UI
 
-### Step 1: Create a New WebSocket Request
+### Step 1: Create a New Socket.IO Request
 
 1. Open Postman
 2. Click **New** → **Socket.IO Request**
@@ -983,7 +942,7 @@ This simulates 120 concurrent users each sending mutations ~every 10ms.
 
 ---
 
-## 📄 License
+## License
 
 MIT
 

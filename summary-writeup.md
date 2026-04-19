@@ -22,11 +22,11 @@ The system leverages NestJS with simple clean architecture principles. NestJS na
 Also, a purely RESTful architecture is insufficient for real-time collaboration, it will collapse. So I implemented a dual-transport layer. Heavy reads, such as initial loads and analytics, are handled via standard REST endpoints, while lightweight, bidirectional mutations are processed over WebSockets.   
 To prevent the Event Loop from blocking during the initial data load, the ingestion pipeline utilizes non-blocking asynchronous iterables to stream the JSON seed data. At the domain level, standard last-write-wins REST overwrites cause data loss during concurrent edits. To solve this, I designed a **Last-Write-Wins Map**. Internally, every mutable field acts as an independent register tied to a timestamp, allowing simultaneous updates to different properties of the same note to merge seamlessly. To satisfy the rigid schema requirements, this internal metadata is stripped out via a projection method before crossing the transport layer, where strict Data Transfer Objects enforce payload boundaries.
 
-## **5\. How the Design Could Scale**
+## **4\. How the Design Could Scale**
 
 The system is designed to scale in two distinct phases to maximize resource efficiency. Acknowledging that Node.js handles I/O exceptionally well but struggles with synchronous CPU-bound tasks, the first phase focuses on vertical scaling. We would implement a native Worker Thread pool where the main thread passes WebSocket payloads via inter-process communication to background workers. These workers handle the heavy CRDT math and JSON serialization for massive broadcasts, keeping the main Event Loop lightning-fast. As traffic scales past single-machine operating system constraints, the second phase introduces horizontal scaling. This involves deploying application replicas behind a Load Balancer and utilizing a Redis Pub/Sub adapter to synchronize WebSocket broadcasts. Data would migrate to a persistent database like PostgreSQL, spatial indexing would be introduced for coordinate-based (x, y) viewport queries, and the heavy calculations for analytical endpoints would be offloaded to background jobs and cached in Redis. Although this might cause analytics to be slightly delayed from real-time results, this is acceptable because the core functionality is guaranteed to never be affected by analytical reads.
 
-## **6\. Client Leverage (Reconciliation Loop)**
+## **5\. Client Leverage (Reconciliation Loop)**
 
 A frontend client (if developed) would leverage this architecture via a "Push-Pull Reconciliation" pattern:
 
@@ -35,7 +35,7 @@ A frontend client (if developed) would leverage this architecture via a "Push-Pu
 3. **Conflict Handling:** If a client submits a delayed/stale operation, the server rejects it and emits a note.conflict event containing the authoritative state, forcing the client to visually snap to the truth.  
 4. **Reconnection:** If the WebSocket drops, the client does *not* request a massive state dump over the socket. Upon reconnecting, it simply calls the REST GET /notes endpoint again to cleanly reconcile the state.
 
-## **7\. AI Usage**
+## **6\. AI Usage**
 
 I utilized AI (LLMs) as an architectural sounding board and pair programmer. Specifically, I used it to:
 
@@ -43,7 +43,7 @@ I utilized AI (LLMs) as an architectural sounding board and pair programmer. Spe
 * Scaffold the boilerplate for the NestJS Dependency Injection container and infrastructure interfaces.  
 * Generate and troubleshoot the Jest E2E test suite to simulate concurrent WebSocket racing conditions and ensure the CRDT math remained deterministic.
 
-## **8\. Tradeoffs & Next Steps**
+## **7\. Tradeoffs & Next Steps**
 
 The MVP explicitly restricts operations to the mutation of the existing 750 notes. Supporting **note.create** event safely in a distributed environment requires generating a composite index to avoid ID collisions, which violates the strict sequential integer id schema provided. Supporting deletion would require implementing an OR-Set (Observed-Remove Set) with Tombstones, increasing scope drastically. This is mainly why there is no create/delete functionality in this challenge.
 
